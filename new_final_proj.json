@@ -156,12 +156,9 @@
    "metadata": {},
    "outputs": [],
    "source": [
-    "# display the missing data and its percent of the column\n",
-    "total_missing = nba_df.isnull().sum().sort_values(ascending=False)\n",
-    "percent_missing = (nba_df.isnull().sum() / nba_df.isnull().count()).sort_values(ascending=False)\n",
-    "\n",
-    "missing_data_df = pd.concat([total_missing, percent_missing], axis=1, keys=[\"Total Missing\", \"Percent Missing\"])\n",
-    "missing_data_df"
+    "#Some rows are all labled \"Did not play (injury/illness)\". We can remove these rows as there is no valuable data\n",
+    "dnp_mask = nba_df['Pos'].str.startswith(\"Did \")\n",
+    "nba_df = nba_df[~dnp_mask]"
    ]
   },
   {
@@ -170,9 +167,22 @@
    "metadata": {},
    "outputs": [],
    "source": [
-    "#Some rows are all labled \"Did not play (injury/illness)\". We can remove these rows as there is no valuable data\n",
-    "dnp_mask = nba_df['Pos'].str.startswith(\"Did \")\n",
-    "nba_df = nba_df[~dnp_mask]"
+    "# Some of the Awards data are null when they should just be marked as 'None'\n",
+    "nba_df['Awards'].fillna('None', inplace=True)"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "# display the missing data and its percent of the column\n",
+    "total_missing = nba_df.isnull().sum().sort_values(ascending=False)\n",
+    "percent_missing = (nba_df.isnull().sum() / nba_df.isnull().count()).sort_values(ascending=False)\n",
+    "\n",
+    "missing_data_df = pd.concat([total_missing, percent_missing], axis=1, keys=[\"Total Missing\", \"Percent Missing\"])\n",
+    "missing_data_df"
    ]
   },
   {
@@ -196,13 +206,10 @@
    "execution_count": null,
    "metadata": {},
    "outputs": [],
-   "source": []
-  },
-  {
-   "cell_type": "markdown",
-   "metadata": {},
    "source": [
-    "## Data Analysis and Visualization"
+    "# see what the null values are for 'GS'\n",
+    "null_gs = nba_df[nba_df['GS'].isnull()]\n",
+    "null_gs.head()"
    ]
   },
   {
@@ -211,27 +218,33 @@
    "metadata": {},
    "outputs": [],
    "source": [
-    "# scatterplot\n",
-    "cols = [\n",
-    "\"GS\",\n",
-    "\"MP\",\n",
-    "\"FG\",\n",
-    "\"FG%\",\n",
-    "\"3P\",\n",
-    "\"3P%\",\n",
-    "\"eFG%\",\n",
-    "\"FT\",\n",
-    "\"FT%\",\n",
-    "\"TRB\",\n",
-    "\"AST\",\n",
-    "\"STL\",\n",
-    "\"BLK\",\n",
-    "\"TOV\",\n",
-    "\"PF\",\n",
-    "\"PTS\"\n",
-    "]\n",
-    "sns.pairplot(nba_df[cols], size=2.5)\n",
-    "plt.show()"
+    "# impute Magic Johnson's null values of games started to be equal to his games, since stat was never recorded\n",
+    "nba_df['GS'] = nba_df['GS'].fillna(nba_df['G'])"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "## Data Analytics"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "from sklearn.linear_model import ElasticNet\n",
+    "from sklearn.ensemble import RandomForestRegressor\n",
+    "from sklearn.linear_model import LinearRegression\n",
+    "from sklearn.model_selection import TimeSeriesSplit\n",
+    "from sklearn.metrics import mean_squared_error\n",
+    "from sklearn.tree import DecisionTreeRegressor\n",
+    "from sklearn.neighbors import KNeighborsRegressor\n",
+    "import xgboost as xgb\n",
+    "import lightgbm as lgb\n",
+    "from skopt import BayesSearchCV"
    ]
   }
  ],
@@ -251,7 +264,7 @@
    "name": "python",
    "nbconvert_exporter": "python",
    "pygments_lexer": "ipython3",
-   "version": "3.11.5"
+   "version": "3.8.18"
   },
   "orig_nbformat": 4,
   "vscode": {
